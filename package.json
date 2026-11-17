@@ -60,7 +60,7 @@
     "@babel/core": "^7.26.0",
     "@babel/preset-env": "^7.26.0",
     "@eslint/js": "^10.0.1",
-    "@fullcalendar/core": "^6.1.22",
+    "@fullcalendar/core": "^7.1.5",
     "@fullcalendar/daygrid": "^6.1.22",
     "@fullcalendar/interaction": "^6.1.22",
     "@fullcalendar/list": "^6.1.22",
