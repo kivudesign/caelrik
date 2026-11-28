@@ -86,6 +86,20 @@ Showing records and states.
 - QR code ✅ and barcode ✅, signature pad ✅, PDF viewer ✅, media player ✅.
 - Markdown editor ✅, code editor ✅, image editor ✅.
 
+### Phase 9 — Integration testing
+
+Every component, used for real before 1.0: installed from the released packages and built into plain PHP, Laravel and Symfony applications, the way a user would.
+
+- For each component, one family at a time, in the order of the phases above:
+  - install and set up from the documentation alone (Composer, npm, CDN), and note every step that is missing or unclear;
+  - render it with real data, through its endpoint helper when it loads data (paging, sorting, filtering, saving);
+  - check the round trip with the framework: form submission and validation errors, CSRF, uploads, translations;
+  - use it with others on one page: several instances, inside a modal, a tab or a wizard, content loaded after the page;
+  - check it in light and dark mode, with the keyboard and a screen reader, in the application's own layout.
+- Report each problem as an issue, labelled by component, and fix the bugs found.
+- Improve the documentation from what was learned: missing steps, clearer examples, recipes for common screens.
+- Turn what was tested by hand into automated tests, so the integrations stay working.
+
 ## Later
 
 - Spreadsheet and PivotGrid: large libraries, after the phases above.
@@ -94,6 +108,7 @@ Showing records and states.
 
 ## Road to 1.0
 
+- Finish the integration testing of Phase 9: every component tested in an application, its bugs fixed and its documentation updated.
 - Review the public API (PHP builders, JavaScript API and events, CSS custom properties, theme schema, bundle files), and fix what needs fixing while 0.x allows it.
 - Publish a backward compatibility policy, then release 1.0 after a release candidate.
 
