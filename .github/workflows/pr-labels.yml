@@ -1,15 +1,19 @@
 name: PR labels
 
-# Labels each pull request from its Conventional Commits title, for the release notes
-# categories (.github/release.yml):
+# Labels each pull request from the tags that start its title, for the release notes
+# categories (.github/release.yml). CONTRIBUTING.md lists the tags.
 #
-#   feat: / feat(grid):            feature
-#   fix:                           bug
-#   fix(a11y): / feat(a11y):       accessibility (plus bug or feature)
-#   docs:                          documentation
-#   chore(deps): / build(deps):    dependencies
-#   ci: test: chore: build: refactor: perf: style:   maintenance
-#   feat!: / fix(grid)!:           breaking (plus the type's label)
+#   [MOD] [REM]                         breaking
+#   [NEW]                               feature
+#   [ENH] [UI] [UX] [TRA]               enhancement
+#   [SEC]                               security
+#   [FIX]                               bug
+#   [DOC]                               documentation
+#   [UPD]                               dependencies
+#   [REF] [KIL] [DB] [BP] [MRG] [REL]   maintenance
+#   "a11y" in the scope ([FIX] a11y:)   accessibility, plus the tag's label
+#
+# Several tags add up: "[FIX][SEC] upload: …" gets bug and security.
 #
 # pull_request_target runs with the base repository's token, so pull requests from
 # forks get labels too. It only reads the title: no code from the pull request runs.
@@ -29,20 +33,28 @@ jobs:
       - uses: actions/github-script@v9
         with:
           script: |
-            const managed = ['breaking', 'feature', 'accessibility', 'bug', 'documentation', 'dependencies', 'maintenance'];
+            const managed = ['breaking', 'feature', 'enhancement', 'security', 'accessibility', 'bug', 'documentation', 'dependencies', 'maintenance'];
+            const labels = {
+              MOD: 'breaking', REM: 'breaking',
+              NEW: 'feature',
+              ENH: 'enhancement', UI: 'enhancement', UX: 'enhancement', TRA: 'enhancement',
+              SEC: 'security',
+              FIX: 'bug',
+              DOC: 'documentation',
+              UPD: 'dependencies',
+              REF: 'maintenance', KIL: 'maintenance', DB: 'maintenance', BP: 'maintenance', MRG: 'maintenance', REL: 'maintenance',
+            };
             const title = context.payload.pull_request.title;
-            const match = /^(\w+)(?:\(([^)]*)\))?(!)?:/.exec(title);
+            // "[FIX][SEC] upload, a11y: summary": the tags, then an optional scope.
+            const match = /^((?:\s*\[[A-Za-z]+\])+)\s*(?:([\w\-./, ]+):)?/.exec(title);
             const wanted = new Set();
             if (match) {
-              const [, type, scope = '', bang] = match;
-              const scopes = scope.split(',').map((s) => s.trim());
-              if (type === 'feat') wanted.add('feature');
-              else if (type === 'fix') wanted.add('bug');
-              else if (type === 'docs') wanted.add('documentation');
-              else if (scopes.includes('deps')) wanted.add('dependencies');
-              else if (['ci', 'test', 'chore', 'build', 'refactor', 'perf', 'style'].includes(type)) wanted.add('maintenance');
-              if (scopes.includes('a11y')) wanted.add('accessibility');
-              if (bang) wanted.add('breaking');
+              for (const [, tag] of match[1].matchAll(/\[([A-Za-z]+)\]/g)) {
+                const label = labels[tag.toUpperCase()];
+                if (label) wanted.add(label);
+              }
+              const scopes = (match[2] ?? '').split(',').map((scope) => scope.trim().toLowerCase());
+              if (wanted.size > 0 && scopes.includes('a11y')) wanted.add('accessibility');
             }
 
             const issue = { owner: context.repo.owner, repo: context.repo.repo, issue_number: context.payload.pull_request.number };

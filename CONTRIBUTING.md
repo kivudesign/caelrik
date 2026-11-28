@@ -15,19 +15,45 @@ We welcome contributions from developers, designers and AI agents.
 
 ## Pull request titles
 
-Use [Conventional Commits](https://www.conventionalcommits.org/): `type(scope): summary`, e.g. `feat(grid): column filters` or `fix(a11y): focus ring on tabs`. The title labels the pull request, and the label sorts it in the release notes:
+Commit messages and pull request titles start with a tag, then the component or area when there is one: `[TAG] scope: summary`, e.g. `[NEW] grid: column filters`, `[FIX] a11y: focus ring on tabs` or `[REL] 0.8.0`. A change of two kinds takes both tags, e.g. `[FIX][SEC] upload: check the file type`. Tags are in capitals.
+
+The **Commit tags** check fails a pull request whose title, or one of whose commits, does not start with a tag from the table below; merge commits are not checked. Fix a title by editing it, and commit messages with `git rebase -i` (reword) and a force-push.
+
+| Tag | Use it for |
+|---|---|
+| `[NEW]` | A new feature or component. |
+| `[ENH]` | An enhancement: no new feature, but things work better (behaviour, performance). |
+| `[UI]` | A user interface improvement: a particular detail of the look, feel or interactivity of a component. |
+| `[UX]` | A user experience improvement, more general than `[UI]`. |
+| `[FIX]` | A bug fix of any sort. |
+| `[SEC]` | A security fix. Report the problem privately first, as [SECURITY.md](SECURITY.md) says: never in a public issue or pull request before the fix is out. |
+| `[MOD]` | A change that may be disruptive, e.g. a new default value for an option, or a renamed builder method. |
+| `[REM]` | The removal of a feature. |
+| `[KIL]` | The removal of unused or obsolete files. |
+| `[REF]` | Refactoring: the structure of the code changes (cleaner, clearer), its behaviour does not. |
+| `[DOC]` | Documentation: the guides, the site, the docblocks, the help given to users and developers. |
+| `[TRA]` | Translations of built-in texts. |
+| `[UPD]` | An update of third-party libraries (Composer, npm, GitHub Actions). |
+| `[DB]` | A change to a database: a schema, a migration or the sample data of the examples. |
+| `[BP]` | A back-port from a newer version or branch, usually a cherry-pick. |
+| `[MRG]` | A merge of branches. |
+| `[REL]` | The release process. |
+
+The title of a pull request labels it, and the label sorts it in the release notes:
 
 | Title | Label | Release notes |
 |---|---|---|
-| `feat:` | `feature` | New features |
-| `fix:` | `bug` | Bug fixes |
-| `…(a11y):` | `accessibility` | Accessibility |
-| `docs:` | `documentation` | Documentation |
-| `chore(deps):` | `dependencies` | Dependencies |
-| `ci:`, `test:`, `chore:`, `build:`, `refactor:`, `perf:`, `style:` | `maintenance` | Maintenance |
-| `!` before the colon, e.g. `feat(form)!:` | `breaking` | Breaking changes |
+| `[MOD]`, `[REM]` | `breaking` | Breaking changes |
+| `[NEW]` | `feature` | New features |
+| `[ENH]`, `[UI]`, `[UX]`, `[TRA]` | `enhancement` | Enhancements |
+| `[SEC]` | `security` | Security |
+| `a11y:` scope, e.g. `[FIX] a11y:` | `accessibility` | Accessibility |
+| `[FIX]` | `bug` | Bug fixes |
+| `[DOC]` | `documentation` | Documentation |
+| `[UPD]` | `dependencies` | Dependencies |
+| `[REF]`, `[KIL]`, `[DB]`, `[BP]`, `[MRG]`, `[REL]` | `maintenance` | Maintenance |
 
-Add the `skip-changelog` label to leave a pull request out of the release notes.
+`[MOD]` and `[REM]` also get the label of the kind of change they make when they have another tag, e.g. `[MOD][NEW]`. Add the `skip-changelog` label to leave a pull request out of the release notes.
 
 ## Changelog
 
@@ -47,7 +73,7 @@ Dependabot opens weekly pull requests for npm, Composer and GitHub Actions updat
 
 Run the **Release** workflow (Actions > Release > Run workflow) with the version, e.g. `0.2.0`.
 
-The entries under `## [Unreleased]` in CHANGELOG.md become the version's section, `## [0.2.0] - 2026-12-01`, with an empty `## [Unreleased]` above it and the compare links updated; the workflow commits that to `main` (`chore(release): 0.2.0`) once the checks pass. To write the section yourself, e.g. to reword it, merge it before running the workflow: a section already there for the version is used as it is. The workflow stops if there is neither, so a release always has notes.
+The entries under `## [Unreleased]` in CHANGELOG.md become the version's section, `## [0.2.0] - 2026-12-01`, with an empty `## [Unreleased]` above it and the compare links updated; the workflow commits that to `main` (`[REL] 0.2.0`) once the checks pass. To write the section yourself, e.g. to reword it, merge it before running the workflow: a section already there for the version is used as it is. The workflow stops if there is neither, so a release always has notes.
 
 `main`'s ruleset must have **GitHub Actions** in its bypass list (Settings > Rules > Rulesets), so the workflow can push the changelog commit. The workflow runs every check on `main`, builds the bundle, commits it on a release commit that only the tag `v0.2.0` points to (Packagist installs tags), creates the GitHub release with the changelog section followed by the pull requests grouped by label, attaches the source maps, and publishes `@caelrik/ui` to npm, with npm trusted publishing (the repository variable `NPM_TRUSTED_PUBLISHING` set to `true`) or an `NPM_TOKEN` secret that bypasses two-factor authentication: [`.github/scripts/npm-publish.sh`](.github/scripts/npm-publish.sh) says how to set either. If the npm step fails, the tag and the release exist: fix the npm access, then run **Actions > Publish to npm** with the same version. Never push a version tag by hand: it would have no bundle.
 

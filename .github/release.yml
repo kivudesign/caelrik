@@ -8,6 +8,10 @@ changelog:
       labels: [breaking]
     - title: New features
       labels: [feature]
+    - title: Enhancements
+      labels: [enhancement]
+    - title: Security
+      labels: [security]
     - title: Accessibility
       labels: [accessibility]
     - title: Bug fixes

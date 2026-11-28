@@ -1,0 +1,64 @@
+name: Commit tags
+
+# Checks that the title of each pull request, and the message of each of its commits,
+# starts with the tags CONTRIBUTING.md lists: "[TAG] scope: summary", e.g.
+# "[NEW] grid: column filters", "[FIX][SEC] upload: check the file type" or "[REL] 0.8.0".
+# Merge commits are not checked. Fix a title by editing it (the check runs again); fix
+# commit messages with `git rebase -i` (reword), then force-push the branch.
+#
+# Keep the list of tags in step with CONTRIBUTING.md and pr-labels.yml.
+#
+# It reads the title and the commit messages from the API: no code from the pull request
+# runs.
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/github-script@v9
+        with:
+          script: |
+            const tags = ['NEW', 'ENH', 'UI', 'UX', 'FIX', 'SEC', 'MOD', 'REM', 'KIL', 'REF', 'DOC', 'TRA', 'UPD', 'DB', 'BP', 'MRG', 'REL'];
+            // One or more tags, a space, an optional "scope: ", then the summary.
+            const format = new RegExp(`^(?:\\[(?:${tags.join('|')})\\])+ (?:[\\w\\-./, ]+: )?\\S`);
+            const help = `Start with one or more of ${tags.map((tag) => `[${tag}]`).join(' ')}, then a space, e.g. "[NEW] grid: column filters" (see CONTRIBUTING.md).`;
+
+            const why = (subject) => {
+              const tag = /^\[([^\]]*)\]/.exec(subject);
+              if (!tag) return 'no tag at the start';
+              if (!tags.includes(tag[1])) return `unknown tag [${tag[1]}]` + (tags.includes(tag[1].toUpperCase()) ? ` (write [${tag[1].toUpperCase()}])` : '');
+              return 'a space and a summary must follow the tags';
+            };
+
+            const errors = [];
+            const pr = context.payload.pull_request;
+            if (!format.test(pr.title)) {
+              errors.push(`Pull request title "${pr.title}": ${why(pr.title)}.`);
+            }
+
+            const commits = await github.paginate(github.rest.pulls.listCommits, {
+              owner: context.repo.owner, repo: context.repo.repo, pull_number: pr.number, per_page: 100,
+            });
+            for (const { sha, commit, parents } of commits) {
+              if (parents.length > 1) continue; // merge commits
+              const subject = commit.message.split('\n')[0];
+              if (!format.test(subject)) {
+                errors.push(`Commit ${sha.slice(0, 7)} "${subject}": ${why(subject)}.`);
+              }
+            }
+
+            if (errors.length > 0) {
+              for (const error of errors) core.error(error);
+              core.setFailed(`${errors.length} title(s) without the right tags. ${help}`);
+            } else {
+              core.info(`The title and ${commits.length} commit(s) have the right tags.`);
+            }
